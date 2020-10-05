@@ -31,7 +31,22 @@ print(type(dataX))
 #house value in unitys of 100,000
 dataY = houseData.target
 for index, item in enumerate(dataY):
-    dataY[index] = item//1
+    print(item)
+    if item%1 > 0.75:
+        dataY[index] = item//1 + 1
+        print("here1")
+    elif item%1 > 0.5:
+        dataY[index] = item//1 + 0.75
+        print("here2")
+    elif item%1 > 0.25:
+        dataY[index] = item//1 + 0.5
+        print("here3")
+    else:
+        dataY[index] = item//1
+        print("here4")
+    dataY[index] *= 100
+    print(dataY[index])
+
 trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
 
 classifier1 = LogisticRegression(max_iter = 10000)
@@ -49,12 +64,16 @@ preds = classifier2.predict(testX)
 
 correct = 0
 incorrect = 0
-for pred, gt in zip(preds, testY):
-    if pred == gt:
+for pred, real in zip(preds, testY):
+    if pred == real:
         correct += 1
     else:
         incorrect += 1
 print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect): 5.2}")
 
 plot_confusion_matrix(classifier2, testX, testY)
+pyplot.show()
+pyplot.scatter(testX, testY, c='green', marker='_', alpha=0.5, label='real values')
+pyplot.scatter(testX, preds, c='red', marker='|', alpha=0.5, label='predicted values')
+pyplot.legend(loc='upper left')
 pyplot.show()
