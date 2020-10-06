@@ -28,7 +28,7 @@ for item in houseData.data:
     dataX.append(item[0])
 dataX = asarray(dataX)
 print(type(dataX))
-#house value in unitys of 100,000
+#house value in units of 100,000
 dataY = houseData.target
 for index, item in enumerate(dataY):
     print(item)
@@ -64,16 +64,26 @@ preds = classifier2.predict(testX)
 
 correct = 0
 incorrect = 0
-for pred, real in zip(preds, testY):
+for pred, real in zip(preds, testX):
     if pred == real:
         correct += 1
     else:
         incorrect += 1
 print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect): 5.2}")
 
-plot_confusion_matrix(classifier2, testX, testY)
-pyplot.show()
-pyplot.scatter(testX, testY, c='green', marker='_', alpha=0.5, label='real values')
-pyplot.scatter(testX, preds, c='red', marker='|', alpha=0.5, label='predicted values')
-pyplot.legend(loc='upper left')
+fig = pyplot.figure("median income of block vs house price")
+fig.tight_layout()
+# plt1 = fig.add_subplot(221)
+plt2 = fig.add_subplot(212)
+plt3 = fig.add_subplot(211)
+plt2.title.set_text("all values")
+plt3.title.set_text("testing values")
+# plt1.plot_confusion_matrix(classifier2, testX, testY)
+#put house price on x axis and income on y axis
+plt2.scatter(testX, testY, c='green', marker='_', alpha=0.5, label='real values')
+plt2.scatter(testX, preds, c='red', marker='|', alpha=0.5, label='predicted values')
+plt3.scatter(dataX, dataY, c='black', marker='.', alpha=0.5)
+# pyplot.subplots_adjust(top=1.5)
+pyplot.subplots_adjust(hspace = 0.4)
+plt2.legend(loc='lower right')
 pyplot.show()
