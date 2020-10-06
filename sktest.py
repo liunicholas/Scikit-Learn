@@ -64,7 +64,7 @@ preds = classifier2.predict(testX)
 
 correct = 0
 incorrect = 0
-for pred, real in zip(preds, testX):
+for pred, real in zip(preds, testY):
     if pred == real:
         correct += 1
     else:
