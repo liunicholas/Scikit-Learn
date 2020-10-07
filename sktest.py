@@ -58,8 +58,9 @@ def getTargetPrices(houseData):
 
     return dataY
 
-def predictWithOneCategory(testParams):
-    houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
+#parameter should be testParams when using multiprocessing 
+def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
+    # houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
     #different data each time
     dataX = []
     for item in houseData.data:
@@ -126,23 +127,24 @@ def main():
     houseData = fetch_california_housing()
     houseTargetPrices = getTargetPrices(houseData)
 
-    testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
+    #stuff for multi processing but its not working
+    # testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
 
-    with Pool(processes=4, maxtasksperchild = 1) as pool:
-            results = pool.map(predictWithOneCategory, testParams)
-            pool.close()
-            pool.join()
-
+    # with Pool(processes=4, maxtasksperchild = 1) as pool:
+    #         results = pool.map(predictWithOneCategory, testParams)
+    #         pool.close()
+    #         pool.join()
+    #
     # results = getTestFigs(houseData, houseTargetPrices)
 
-    # fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
-    # fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
-    # fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
-    # fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
-    # fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
-    # fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
-    # fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
-    # fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
+    fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
+    fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
+    fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
+    fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
+    fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
+    fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
+    fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
+    fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
 
     pyplot.subplots_adjust(hspace = 0.4)
     pyplot.show()
