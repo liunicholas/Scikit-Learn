@@ -13,6 +13,32 @@ from sklearn.metrics import plot_confusion_matrix
 from matplotlib import pyplot
 from numpy import *
 
+# python 3.8
+# certifi               2020.6.20
+# cycler                0.10.0
+# decorator             4.4.2
+# imageio               2.9.0
+# joblib                0.16.0
+# kiwisolver            1.2.0
+# mahotas               1.4.11
+# matplotlib            3.3.1
+# networkx              2.4
+# numpy                 1.19.1
+# opencv-contrib-python 4.4.0.42
+# Pillow                7.2.0
+# pip                   20.2.3
+# pyparsing             2.4.7
+# python-dateutil       2.8.1
+# PyWavelets            1.1.1
+# scikit-image          0.17.2
+# scikit-learn          0.23.2
+# scipy                 1.5.2
+# setuptools            49.6.0
+# six                   1.15.0
+# threadpoolctl         2.1.0
+# tifffile              2020.8.13
+# wheel                 0.35.1
+
 # digits = load_digits()
 # digitsX = digits.images.reshape(len(digits.images), 64)
 # digitsY = digits.target
