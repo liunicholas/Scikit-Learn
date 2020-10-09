@@ -56,9 +56,18 @@ def getTargetPrices(houseData):
             dataY[index] = item//1
         dataY[index] *= 100
 
+    #house value in units of 1,000 dollars
     return dataY
 
-#parameter should be testParams when using multiprocessing 
+def trainTestSplitAll(houseData, dataY):
+    dataX = houseData.data
+    trainX, testX, trainY, testY = [], [], [], []
+    trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
+
+    return trainX, testX, trainY, testY
+
+
+#parameter should be testParams when using multiprocessing
 def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
     # houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
     #different data each time
@@ -122,6 +131,75 @@ def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
 #
 #     return results
 
+def predictWithAll(trainX, testX, trainY, testY):
+    #classifiers to try
+    classifier1 = LogisticRegression(max_iter = 100000)
+    classifier2 = RidgeClassifier(max_iter = 10000)
+    classifier3 = SGDClassifier(max_iter = 10000, loss='log')
+    classifier4 = Perceptron()
+    classifier5 = SVC()
+    classifier6 = LinearSVC()
+
+    trainX = trainX.reshape(-1,8)
+    classifier1.fit(trainX, trainY)
+    preds = []
+    preds = classifier1.predict(testX)
+
+    correct = 0
+    incorrect = 0
+    for pred, real in zip(preds, testY):
+        if pred == real:
+            correct += 1
+        else:
+            incorrect += 1
+    print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect): 5.2}")
+
+    # testXpreds = []
+    # #each loop will get the predicted x values from its category, 8 categories total
+    # for i in range(8):
+    #     #get the desired dataX test and train values
+    #     dataXtest = []
+    #     for item in testX:
+    #         dataXtest.append(item[i])
+    #     dataXtest = asarray(dataXtest)
+    #
+    #     dataXtrain = []
+    #     for item in trainX:
+    #         dataXtrain.append(item[i])
+    #     dataXtrain = asarray(dataXtrain)
+    #
+    #     dataXtrain = dataXtrain.reshape(-1,1)
+    #     dataXtest = dataXtest.reshape(-1,1)
+    #     classifier1.fit(dataXtrain, trainY)
+    #     preds = []
+    #     preds = classifier1.predict(dataXtest)
+    #
+    #     testXpreds.append(preds)
+    #
+    # print(testXpreds)
+    #
+    # predsCombined = []
+    # print(len(testXpreds))
+    # print(len(testXpreds[0]))
+    # for i in range(len(testXpreds[0])):
+    #     totalPrice = 0
+    #     for j in range(8):
+    #         totalPrice += testXpreds[j][i]
+    #     #gets the average of all the preds using all 8 categories
+    #     predsCombined.append(totalPrice/8)
+    #
+    # print(predsCombined)
+    #
+    # correct = 0
+    # incorrect = 0
+    # for pred, real in zip(predsCombined, testY):
+    #     if abs(pred-real) <= 50:
+    #         correct += 1
+    #     else:
+    #         incorrect += 1
+    # print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect): 5.2}")
+
+
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
     houseData = fetch_california_housing()
@@ -137,17 +215,26 @@ def main():
     #
     # results = getTestFigs(houseData, houseTargetPrices)
 
-    fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
-    fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
-    fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
-    fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
-    fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
-    fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
-    fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
-    fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
+    # fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
+    # fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
+    # fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
+    # fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
+    # fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
+    # fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
+    # fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
+    # fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
 
-    pyplot.subplots_adjust(hspace = 0.4)
-    pyplot.show()
+    # #fig8 = predictWithAll(houseData, houseTargetPrices)
+
+    # pyplot.subplots_adjust(hspace = 0.4)
+    # pyplot.show()
+
+    #this train and test X are arrays with all 8 categories
+    #I will split this later so that all returns are aligned with each other
+    #reset all categories
+    trainX, testX, trainY, testY = [], [], [], []
+    trainX, testX, trainY, testY = trainTestSplitAll(houseData, houseTargetPrices)
+    predictWithAll(trainX, testX, trainY, testY)
 
 if __name__ == '__main__':
 	main()
