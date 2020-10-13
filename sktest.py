@@ -133,14 +133,14 @@ def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
 
 def predictWithAll(trainX, testX, trainY, testY):
     #classifiers to try
-    classifier1 = LogisticRegression(max_iter = 100000)
+    classifier1 = LogisticRegression(max_iter = 100000000)
     classifier2 = RidgeClassifier(max_iter = 10000)
     classifier3 = SGDClassifier(max_iter = 10000, loss='log')
     classifier4 = Perceptron()
     classifier5 = SVC()
     classifier6 = LinearSVC()
 
-    trainX = trainX.reshape(-1,8)
+    trainX = trainX.reshape(-1,6)
     classifier1.fit(trainX, trainY)
     preds = []
     preds = classifier1.predict(testX)
@@ -203,6 +203,13 @@ def predictWithAll(trainX, testX, trainY, testY):
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
     houseData = fetch_california_housing()
+    houseDataDataTemp = []
+    for i in range(len(houseData.data)):
+        # print(houseData.data[i])
+        houseDataDataTemp.append(houseData.data[i][:6])
+        # print(houseData.data[i])
+    houseData.data = asarray(houseDataDataTemp)
+
     houseTargetPrices = getTargetPrices(houseData)
 
     #stuff for multi processing but its not working
@@ -225,7 +232,7 @@ def main():
     # fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
 
     # #fig8 = predictWithAll(houseData, houseTargetPrices)
-
+    #
     # pyplot.subplots_adjust(hspace = 0.4)
     # pyplot.show()
 
