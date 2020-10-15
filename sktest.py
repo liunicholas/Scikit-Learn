@@ -46,15 +46,41 @@ def getTargetPrices(houseData):
     dataY = []
     dataY = houseData.target
     for index, item in enumerate(dataY):
-        if item%1 > 0.75:
+        # if item%1 > 0.75:
+        #     dataY[index] = item//1 + 1
+        # elif item%1 > 0.5:
+        #     dataY[index] = item//1 + 0.75
+        # elif item%1 > 0.25:
+        #     dataY[index] = item//1 + 0.5
+        # else:
+        #     dataY[index] = item//1
+        # dataY[index] *= 100
+
+        #splitting into smaller categories is not working well
+        #might try making the correct standard more lenient
+        if item%1 > 0.9:
             dataY[index] = item//1 + 1
+        elif item%1 > 0.8:
+            dataY[index] = item//1 + 0.9
+        elif item%1 > 0.7:
+            dataY[index] = item//1 + 0.8
+        elif item%1 > 0.6:
+            dataY[index] = item//1 + 0.7
         elif item%1 > 0.5:
-            dataY[index] = item//1 + 0.75
-        elif item%1 > 0.25:
+            dataY[index] = item//1 + 0.6
+        elif item%1 > 0.4:
             dataY[index] = item//1 + 0.5
+        elif item%1 > 0.3:
+            dataY[index] = item//1 + 0.4
+        elif item%1 > 0.2:
+            dataY[index] = item//1 + 0.3
+        elif item%1 > 0.1:
+            dataY[index] = item//1 + 0.2
         else:
-            dataY[index] = item//1
+            dataY[index] = item//1 + 0.1
+        # print(dataY[index])
         dataY[index] *= 100
+        dataY[index] = int(dataY[index])
 
     #house value in units of 1,000 dollars
     return dataY
@@ -62,6 +88,7 @@ def getTargetPrices(houseData):
 def trainTestSplitAll(houseData, dataY):
     dataX = houseData.data
     trainX, testX, trainY, testY = [], [], [], []
+    #changing the test size doesn't have much of an effect on the percent correct
     trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
 
     return trainX, testX, trainY, testY
@@ -140,6 +167,7 @@ def predictWithAll(trainX, testX, trainY, testY):
     classifier5 = SVC()
     classifier6 = LinearSVC()
 
+    #classifier 1 is so far the best, 2 through 6 are not doing so well
     trainX = trainX.reshape(-1,6)
     classifier1.fit(trainX, trainY)
     preds = []
@@ -147,8 +175,15 @@ def predictWithAll(trainX, testX, trainY, testY):
 
     correct = 0
     incorrect = 0
+    # for pred, real in zip(preds, testY):
+    #     if pred == real:
+    #         correct += 1
+    #     else:
+    #         incorrect += 1
+
+    #error of 10,000 dollars
     for pred, real in zip(preds, testY):
-        if pred == real:
+        if abs(pred-real) <= 10:
             correct += 1
         else:
             incorrect += 1
@@ -203,6 +238,7 @@ def predictWithAll(trainX, testX, trainY, testY):
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
     houseData = fetch_california_housing()
+    #mess with selected data
     houseDataDataTemp = []
     for i in range(len(houseData.data)):
         # print(houseData.data[i])
