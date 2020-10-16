@@ -173,8 +173,8 @@ def predictWithAll(trainX, testX, trainY, testY):
     preds = []
     preds = classifier1.predict(testX)
 
-    correct = 0
-    incorrect = 0
+    # correct = 0
+    # incorrect = 0
     # for pred, real in zip(preds, testY):
     #     if pred == real:
     #         correct += 1
@@ -182,12 +182,40 @@ def predictWithAll(trainX, testX, trainY, testY):
     #         incorrect += 1
 
     #error of 10,000 dollars
+    correct1 = 0
+    incorrect1 = 0
+    #error of 20,000 dollars
+    correct2 = 0
+    incorrect2 = 0
+    #error of 30,000 dollars
+    correct3 = 0
+    incorrect3 = 0
     for pred, real in zip(preds, testY):
         if abs(pred-real) <= 10:
-            correct += 1
-        else:
-            incorrect += 1
-    print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect): 5.2}")
+            correct1 += 1
+            correct2 += 1
+            correct3 += 1
+            continue
+        if abs(pred-real) <= 20:
+            incorrect1 += 1
+            correct2 += 1
+            correct3 += 1
+            continue
+        if abs(pred-real) <= 30:
+            incorrect1 += 1
+            incorrect2 += 1
+            correct3 += 1
+            continue
+
+        #if it's not accurate to any of the above boundaries
+        incorrect3 += 1
+
+    print("plus minus $10,000")
+    print(f"Correct: {correct1}, Incorrect: {incorrect1}, % Correct: {correct1/(correct1 + incorrect1): 5.2}")
+    print("plus minus $20,000")
+    print(f"Correct: {correct2}, Incorrect: {incorrect2}, % Correct: {correct2/(correct2 + incorrect2): 5.2}")
+    print("plus minus $30,000")
+    print(f"Correct: {correct3}, Incorrect: {incorrect3}, % Correct: {correct3/(correct3 + incorrect3): 5.2}")
 
     # testXpreds = []
     # #each loop will get the predicted x values from its category, 8 categories total
@@ -242,6 +270,7 @@ def main():
     houseDataDataTemp = []
     for i in range(len(houseData.data)):
         # print(houseData.data[i])
+        #last two categories are longitude and latitude so I ignore them
         houseDataDataTemp.append(houseData.data[i][:6])
         # print(houseData.data[i])
     houseData.data = asarray(houseDataDataTemp)
