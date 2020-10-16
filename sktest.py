@@ -93,7 +93,6 @@ def trainTestSplitAll(houseData, dataY):
 
     return trainX, testX, trainY, testY
 
-
 #parameter should be testParams when using multiprocessing
 def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
     # houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
@@ -218,6 +217,14 @@ def predictWithAll(trainX, testX, trainY, testY):
     print(f"Correct: {correct2}, Incorrect: {incorrect2}, % Correct: {correct2/(correct2 + incorrect2): 5.2}")
     print("plus minus $30,000")
     print(f"Correct: {correct3}, Incorrect: {incorrect3}, % Correct: {correct3/(correct3 + incorrect3): 5.2}")
+
+    # fig = pyplot.figure("using 6 categories")
+    # fig.tight_layout()
+    # plt = fig.add_subplot(111)
+    # plt.title.set_text("preds vs real price")
+    # plt.matshow([preds,testY])
+    plot_confusion_matrix(classifier1, testX, testY)
+    pyplot.show()
 
     # testXpreds = []
     # #each loop will get the predicted x values from its category, 8 categories total
