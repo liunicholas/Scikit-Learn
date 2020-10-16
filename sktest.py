@@ -208,6 +208,8 @@ def predictWithAll(trainX, testX, trainY, testY):
             continue
 
         #if it's not accurate to any of the above boundaries
+        incorrect1 += 1
+        incorrect2 += 1
         incorrect3 += 1
 
     print("plus minus $10,000")
