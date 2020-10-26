@@ -5,6 +5,8 @@ from sklearn.linear_model import Perceptron
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
 
+from sklearn import preprocessing
+
 from sklearn.datasets import fetch_california_housing
 from sklearn.datasets import load_digits
 
@@ -86,10 +88,27 @@ def getTargetPrices(houseData):
     return dataY
 
 def trainTestSplitAll(houseData, dataY):
+    # dataY.reshape(-1,1)
+    # print(dataY)
     dataX = houseData.data
+    scaledX = preprocessing.scale(dataX)
+    # print(scaledX.shape)
+    # print(dataY.shape)
+    # dataY = list(dataY)
+    for index, item in enumerate(scaledX):
+        for i in range(6):
+            if item[i]>1.5 or item[i]<-1.5:
+                delete(dataY,index,0)
+                delete(scaledX,index,0)
+                # dataY.delete(index)
+                # scaledX.delete(index)
+                continue
+
+    # dataY = dataY.asarray()
+
     trainX, testX, trainY, testY = [], [], [], []
     #changing the test size doesn't have much of an effect on the percent correct
-    trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
+    trainX, testX, trainY, testY = train_test_split(scaledX, dataY, test_size = 0.3, shuffle = True)
 
     return trainX, testX, trainY, testY
 
