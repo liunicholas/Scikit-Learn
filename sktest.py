@@ -88,16 +88,18 @@ def getTargetPrices(houseData):
     return dataY
 
 def trainTestSplitAll(houseData, dataY):
+    pt = preprocessing.PowerTransformer()
     # dataY.reshape(-1,1)
     # print(dataY)
     dataX = houseData.data
-    scaledX = preprocessing.scale(dataX)
+    # scaledX = preprocessing.scale(dataX)
+    scaledX = pt.fit_transform(dataX)
     # print(scaledX.shape)
     # print(dataY.shape)
     # dataY = list(dataY)
     for index, item in enumerate(scaledX):
         for i in range(6):
-            if item[i]>1.5 or item[i]<-1.5:
+            if item[i]>1 or item[i]<-1:
                 delete(dataY,index,0)
                 delete(scaledX,index,0)
                 # dataY.delete(index)
