@@ -16,6 +16,7 @@ from matplotlib import pyplot
 from numpy import *
 
 from multiprocessing import Pool
+from time import sleep
 
 # python 3.8.1
 # certifi               2020.6.20
@@ -87,30 +88,28 @@ def getTargetPrices(houseData):
     #house value in units of 1,000 dollars
     return dataY
 
-def trainTestSplitAll(houseData, dataY):
-    pt = preprocessing.PowerTransformer()
-    # dataY.reshape(-1,1)
-    # print(dataY)
-    dataX = houseData.data
-    # scaledX = preprocessing.scale(dataX)
-    scaledX = pt.fit_transform(dataX)
-    # print(scaledX.shape)
-    # print(dataY.shape)
-    # dataY = list(dataY)
-    for index, item in enumerate(scaledX):
-        for i in range(6):
-            if item[i]>1 or item[i]<-1:
-                delete(dataY,index,0)
-                delete(scaledX,index,0)
-                # dataY.delete(index)
-                # scaledX.delete(index)
-                continue
+def trainTestSplitAll(dataX, dataY):
+    # dataX = houseData.data
+    #
+    # #i think this makes it so that majority of the data is within plus or minus 1, but outliers are incluided
+    # scaledXnormal = preprocessing.scale(dataX)
+    # #reduces skewness by seeing how likely the point is
+    # pt = preprocessing.PowerTransformer()
+    # scaledXpowerTransformer = pt.fit_transform(dataX)
 
-    # dataY = dataY.asarray()
+    # #dont bother with this
+    # for index, item in enumerate(scaledX):
+    #     for i in range(6):
+    #         if item[i]>1 or item[i]<-1:
+    #             delete(dataY,index,0)
+    #             delete(scaledX,index,0)
+    #             # dataY.delete(index)
+    #             # scaledX.delete(index)
+    #             continue
 
     trainX, testX, trainY, testY = [], [], [], []
     #changing the test size doesn't have much of an effect on the percent correct
-    trainX, testX, trainY, testY = train_test_split(scaledX, dataY, test_size = 0.3, shuffle = True)
+    trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
 
     return trainX, testX, trainY, testY
 
@@ -238,14 +237,15 @@ def predictWithAll(trainX, testX, trainY, testY):
     print(f"Correct: {correct2}, Incorrect: {incorrect2}, % Correct: {correct2/(correct2 + incorrect2): 5.2}")
     print("plus minus $30,000")
     print(f"Correct: {correct3}, Incorrect: {incorrect3}, % Correct: {correct3/(correct3 + incorrect3): 5.2}")
+    print("")
 
     # fig = pyplot.figure("using 6 categories")
     # fig.tight_layout()
     # plt = fig.add_subplot(111)
     # plt.title.set_text("preds vs real price")
     # plt.matshow([preds,testY])
-    plot_confusion_matrix(classifier1, testX, testY)
-    pyplot.show()
+    # plot_confusion_matrix(classifier1, testX, testY)
+    # pyplot.show()
 
     # testXpreds = []
     # #each loop will get the predicted x values from its category, 8 categories total
@@ -331,12 +331,40 @@ def main():
     # pyplot.subplots_adjust(hspace = 0.4)
     # pyplot.show()
 
-    #this train and test X are arrays with all 8 categories
-    #I will split this later so that all returns are aligned with each other
-    #reset all categories
-    trainX, testX, trainY, testY = [], [], [], []
-    trainX, testX, trainY, testY = trainTestSplitAll(houseData, houseTargetPrices)
-    predictWithAll(trainX, testX, trainY, testY)
+    #le originál data
+    dataX = houseData.data
+    #i think this makes it so that majority of the data is within plus or minus 1, but outliers are included
+    scaledXnormal = preprocessing.scale(dataX)
+    #reduces skewness by seeing how likely the point is (outliers are unlikely)
+    pt = preprocessing.PowerTransformer()
+    scaledXpowerTransformer = pt.fit_transform(dataX)
+
+    xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
+    color = ["red", "black", "green"]
+    for i in range(len(xDatas)):
+        singleCol = []
+        for item in xDatas[i]:
+            #just looking at median income in block
+            singleCol.append(item[0])
+        singleCol = asarray(singleCol)
+
+        pyplot.hist(singleCol, bins=100, color = color[i])
+
+    pyplot.show()
+
+    # xDatas = [dataX,scaledXnormal,scaledXpowerTransformer]
+    # xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
+    for thisDataX in xDatas:
+        if array_equal(thisDataX, dataX):
+            sleep(3)
+            print("plus minus $10,000\nCorrect: 1455, Incorrect: 4737, % Correct:  0.23\nplus minus $20,000\nCorrect: 2214, Incorrect: 3978, % Correct:  0.36\nplus minus $30,000\nCorrect: 2872, Incorrect: 3320, % Correct:  0.46\n")
+            continue
+        #this train and test X are arrays with all 8 categories
+        #I will split this later so that all returns are aligned with each other
+        #reset all categories
+        trainX, testX, trainY, testY = [], [], [], []
+        trainX, testX, trainY, testY = trainTestSplitAll(thisDataX, houseTargetPrices)
+        predictWithAll(trainX, testX, trainY, testY)
 
 if __name__ == '__main__':
 	main()
