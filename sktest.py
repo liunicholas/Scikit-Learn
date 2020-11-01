@@ -49,16 +49,6 @@ def getTargetPrices(houseData):
     dataY = []
     dataY = houseData.target
     for index, item in enumerate(dataY):
-        # if item%1 > 0.75:
-        #     dataY[index] = item//1 + 1
-        # elif item%1 > 0.5:
-        #     dataY[index] = item//1 + 0.75
-        # elif item%1 > 0.25:
-        #     dataY[index] = item//1 + 0.5
-        # else:
-        #     dataY[index] = item//1
-        # dataY[index] *= 100
-
         #splitting into smaller categories is not working well
         #might try making the correct standard more lenient
         if item%1 > 0.9:
@@ -88,6 +78,126 @@ def getTargetPrices(houseData):
     #house value in units of 1,000 dollars
     return dataY
 
+def searchOutliers(someXset):
+    # print(someXset)
+    #use model.coefficients later per drew's recommendation
+
+    # median income in block
+    # median house age
+    # average number of rooms
+    # average number of bedrooms
+    # block population
+    # house occupancy
+
+    medianIncomeList = []
+    medianAgeList = []
+    roomsList = []
+    bedroomsList = []
+    populationList = []
+    occupancyList = []
+    for index, item in enumerate(someXset):
+        medianIncome = item[0]
+        medianAge = item[1]
+        rooms = item[2]
+        bedrooms = item[3]
+        population = item[4]
+        occupancy = item[5]
+
+        medianIncomeList.append(medianIncome)
+        medianAgeList.append(medianAge)
+        roomsList.append(rooms)
+        bedroomsList.append(bedrooms)
+        populationList.append(population)
+        occupancyList.append(occupancy)
+
+    medianIncomeListStd = std(medianIncomeList)
+    medianAgeListStd = std(medianAgeList)
+    roomsListStd = std(roomsList)
+    bedroomsListStd = std(bedroomsList)
+    populationListStd = std(populationList)
+    occupancyListStd = std(occupancyList)
+    # print(medianIncomeListStd)
+
+    medianIncomeListAvg = mean(medianIncomeList)
+    medianAgeListAvg = mean(medianAgeList)
+    roomsListAvg = mean(roomsList)
+    bedroomsListAvg = mean(bedroomsList)
+    populationListAvg = mean(populationList)
+    occupancyListAvg = mean(occupancyList)
+    # print(medianIncomeListAvg)
+
+    stdDiff = 20
+
+    medIncBot, medIncTop = medianIncomeListAvg-stdDiff*medianIncomeListStd, medianIncomeListAvg+stdDiff*medianIncomeListStd
+    medAgeBot, medAgeTop = medianAgeListAvg-stdDiff*medianAgeListStd, medianAgeListAvg+stdDiff*medianAgeListStd
+    RoomBot, RoomTop = roomsListAvg-stdDiff*roomsListStd, roomsListAvg+stdDiff*roomsListStd
+    BedroomBot, BedroomTop = bedroomsListAvg-stdDiff*bedroomsListStd, bedroomsListAvg+stdDiff*bedroomsListStd
+    popBot, popTop = populationListAvg-stdDiff*populationListStd, populationListAvg+stdDiff*populationListStd
+    occBot, occTop = occupancyListAvg-stdDiff*occupancyListStd, occupancyListAvg+stdDiff*occupancyListStd
+
+    # print(medIncBot, medIncTop)
+    # print(RoomTop)
+
+    print("welcome to the game show, crazy houses in the california housing database!")
+    print("if a value for a house is more than 20 std away from mean, it will be here")
+
+    outliers = []
+    for index, item in enumerate(someXset):
+        OUTLIER = False
+
+        medianIncome = item[0]
+        medianAge = item[1]
+        rooms = item[2]
+        bedrooms = item[3]
+        population = item[4]
+        occupancy = item[5]
+
+        if "something" == "not something":
+            OUTLIER = True
+        elif medianIncome >= medIncTop:
+            OUTLIER = True
+        elif medianAge >= medAgeTop:
+            OUTLIER = True
+        elif rooms >= RoomTop:
+            OUTLIER = True
+        elif bedrooms >= BedroomTop:
+            OUTLIER = True
+        elif population >= popTop:
+            OUTLIER = True
+        elif occupancy >= occTop:
+            OUTLIER = True
+        else:
+            continue
+
+        if OUTLIER:
+            outliers.append(index)
+            print(f"median income of block: {medianIncome}")
+            print(f"age of house: {medianAge}")
+            print(f"rooms: {rooms}")
+            print(f"bedrooms: {bedrooms}")
+            print(f"population of block: {population}")
+            print(f"house occupancy: {occupancy}")
+            print("")
+
+    # #display
+    # for i in range(len(outliers)):
+    #     medianIncome = someXset[i][0]
+    #     medianAge = someXset[i][1]
+    #     rooms = someXset[i][2]
+    #     bedrooms = someXset[i][3]
+    #     population = someXset[i][4]
+    #     occupancy = someXset[i][5]
+    #
+    #     print(f"median income of block: {medianIncome}")
+    #     print(f"age of house: {medianAge}")
+    #     print(f"rooms: {rooms}")
+    #     print(f"bedrooms: {bedrooms}")
+    #     print(f"population of block: {population}")
+    #     print(f"house occupancy: {occupancy}")
+    #     print("")
+
+    return
+
 def trainTestSplitAll(dataX, dataY):
     # dataX = houseData.data
     #
@@ -112,6 +222,20 @@ def trainTestSplitAll(dataX, dataY):
     trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
 
     return trainX, testX, trainY, testY
+
+def removeOutliers(someXset, houseTargetPrices):
+    tempX = someXset
+    tempY = houseTargetPrices
+    for index, item in enumerate(tempX):
+        for i in range(6):
+            if item[i]>1 or item[i]<-1:
+                delete(tempY,index,0)
+                delete(tempX,index,0)
+                # dataY.delete(index)
+                # scaledX.delete(index)
+                continue
+
+    return tempX, tempY
 
 #parameter should be testParams when using multiprocessing
 def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
@@ -192,14 +316,6 @@ def predictWithAll(trainX, testX, trainY, testY):
     preds = []
     preds = classifier1.predict(testX)
 
-    # correct = 0
-    # incorrect = 0
-    # for pred, real in zip(preds, testY):
-    #     if pred == real:
-    #         correct += 1
-    #     else:
-    #         incorrect += 1
-
     #error of 10,000 dollars
     correct1 = 0
     incorrect1 = 0
@@ -238,60 +354,6 @@ def predictWithAll(trainX, testX, trainY, testY):
     print("plus minus $30,000")
     print(f"Correct: {correct3}, Incorrect: {incorrect3}, % Correct: {correct3/(correct3 + incorrect3): 5.2}")
     print("")
-
-    # fig = pyplot.figure("using 6 categories")
-    # fig.tight_layout()
-    # plt = fig.add_subplot(111)
-    # plt.title.set_text("preds vs real price")
-    # plt.matshow([preds,testY])
-    # plot_confusion_matrix(classifier1, testX, testY)
-    # pyplot.show()
-
-    # testXpreds = []
-    # #each loop will get the predicted x values from its category, 8 categories total
-    # for i in range(8):
-    #     #get the desired dataX test and train values
-    #     dataXtest = []
-    #     for item in testX:
-    #         dataXtest.append(item[i])
-    #     dataXtest = asarray(dataXtest)
-    #
-    #     dataXtrain = []
-    #     for item in trainX:
-    #         dataXtrain.append(item[i])
-    #     dataXtrain = asarray(dataXtrain)
-    #
-    #     dataXtrain = dataXtrain.reshape(-1,1)
-    #     dataXtest = dataXtest.reshape(-1,1)
-    #     classifier1.fit(dataXtrain, trainY)
-    #     preds = []
-    #     preds = classifier1.predict(dataXtest)
-    #
-    #     testXpreds.append(preds)
-    #
-    # print(testXpreds)
-    #
-    # predsCombined = []
-    # print(len(testXpreds))
-    # print(len(testXpreds[0]))
-    # for i in range(len(testXpreds[0])):
-    #     totalPrice = 0
-    #     for j in range(8):
-    #         totalPrice += testXpreds[j][i]
-    #     #gets the average of all the preds using all 8 categories
-    #     predsCombined.append(totalPrice/8)
-    #
-    # print(predsCombined)
-    #
-    # correct = 0
-    # incorrect = 0
-    # for pred, real in zip(predsCombined, testY):
-    #     if abs(pred-real) <= 50:
-    #         correct += 1
-    #     else:
-    #         incorrect += 1
-    # print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect): 5.2}")
-
 
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
@@ -339,32 +401,33 @@ def main():
     pt = preprocessing.PowerTransformer()
     scaledXpowerTransformer = pt.fit_transform(dataX)
 
-    xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
-    color = ["red", "black", "green"]
-    for i in range(len(xDatas)):
-        singleCol = []
-        for item in xDatas[i]:
-            #just looking at median income in block
-            singleCol.append(item[0])
-        singleCol = asarray(singleCol)
+    searchOutliers(dataX)
 
-        pyplot.hist(singleCol, bins=100, color = color[i])
-
-    pyplot.show()
-
-    # xDatas = [dataX,scaledXnormal,scaledXpowerTransformer]
     # xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
-    for thisDataX in xDatas:
-        if array_equal(thisDataX, dataX):
-            sleep(3)
-            print("plus minus $10,000\nCorrect: 1455, Incorrect: 4737, % Correct:  0.23\nplus minus $20,000\nCorrect: 2214, Incorrect: 3978, % Correct:  0.36\nplus minus $30,000\nCorrect: 2872, Incorrect: 3320, % Correct:  0.46\n")
-            continue
-        #this train and test X are arrays with all 8 categories
-        #I will split this later so that all returns are aligned with each other
-        #reset all categories
-        trainX, testX, trainY, testY = [], [], [], []
-        trainX, testX, trainY, testY = trainTestSplitAll(thisDataX, houseTargetPrices)
-        predictWithAll(trainX, testX, trainY, testY)
+    # color = ["red", "black", "green"]
+    # for i in range(len(xDatas)):
+    #     singleCol = []
+    #     for item in xDatas[i]:
+    #         #just looking at median income in block
+    #         singleCol.append(item[0])
+    #     singleCol = asarray(singleCol)
+    #
+    #     pyplot.hist(singleCol, bins=100, color = color[i])
+    #
+    # pyplot.show()
+
+    # for thisDataX in xDatas:
+    #     if array_equal(thisDataX, dataX):
+    #         sleep(3)
+    #         print("plus minus $10,000\nCorrect: 1455, Incorrect: 4737, % Correct:  0.23\nplus minus $20,000\nCorrect: 2214, Incorrect: 3978, % Correct:  0.36\nplus minus $30,000\nCorrect: 2872, Incorrect: 3320, % Correct:  0.46\n")
+    #         continue
+    #     #this train and test X are arrays with all 8 categories
+    #     #I will split this later so that all returns are aligned with each other
+    #     #reset all categories
+    #     thisDataX, houseTargetPricesModified = removeOutliers(thisDataX, houseTargetPrices)
+    #     trainX, testX, trainY, testY = [], [], [], []
+    #     trainX, testX, trainY, testY = trainTestSplitAll(thisDataX, houseTargetPricesModified)
+    #     predictWithAll(trainX, testX, trainY, testY)
 
 if __name__ == '__main__':
 	main()
