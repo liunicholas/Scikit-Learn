@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import plot_confusion_matrix
 from matplotlib import pyplot
 from numpy import *
+from pandas import *
 
 from multiprocessing import Pool
 from time import sleep
@@ -75,10 +76,22 @@ def getTargetPrices(houseData):
         dataY[index] *= 100
         dataY[index] = int(dataY[index])
 
+    # discretize = preprocessing.KBinsDiscretizer(n_bins=100, encode='ordinal', strategy='quantile')
+    # # discretize.fit(dataY)
+    # tempY = discretize.fit_transform([dataY])
+
+    # dataY = digitize(dataY,bins=50)
+
+    # print(dataY)
+    # #using pandas to cut, KBinsDiscretizer needs a 2d array, not sure why
+    # #just kidding this doesn't work either
+    # cut(dataY, bins=100)
+    # print(dataY)
+
     #house value in units of 1,000 dollars
     return dataY
 
-def searchOutliers(someXset):
+def searchOutliers(someXset, dataY):
     # print(someXset)
     #use model.coefficients later per drew's recommendation
 
@@ -141,6 +154,8 @@ def searchOutliers(someXset):
     print("welcome to the game show, crazy houses in the california housing database!")
     print("if a value for a house is more than 20 std away from mean, it will be here")
 
+    # print(someXset)
+
     outliers = []
     for index, item in enumerate(someXset):
         OUTLIER = False
@@ -151,6 +166,7 @@ def searchOutliers(someXset):
         bedrooms = item[3]
         population = item[4]
         occupancy = item[5]
+        housePrice = dataY[index]
 
         if "something" == "not something":
             OUTLIER = True
@@ -172,11 +188,12 @@ def searchOutliers(someXset):
         if OUTLIER:
             outliers.append(index)
             print(f"median income of block: {medianIncome}")
-            print(f"age of house: {medianAge}")
+            print(f"median age of house in block: {medianAge}")
             print(f"rooms: {rooms}")
             print(f"bedrooms: {bedrooms}")
-            print(f"population of block: {population}")
+            print(f"block population: {population}")
             print(f"house occupancy: {occupancy}")
+            print(f"house price: {housePrice}")
             print("")
 
     # #display
@@ -358,15 +375,12 @@ def predictWithAll(trainX, testX, trainY, testY):
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
     houseData = fetch_california_housing()
-    #mess with selected data
-    houseDataDataTemp = []
-    for i in range(len(houseData.data)):
-        # print(houseData.data[i])
-        #last two categories are longitude and latitude so I ignore them
-        houseDataDataTemp.append(houseData.data[i][:6])
-        # print(houseData.data[i])
-    houseData.data = asarray(houseDataDataTemp)
 
+    #choose the desired columns
+    #last two categories are longitude and latitude so I ignore them
+    houseData.data = houseData.data[:,0:6]
+
+    #function to convert prices into categories
     houseTargetPrices = getTargetPrices(houseData)
 
     #stuff for multi processing but its not working
@@ -397,11 +411,15 @@ def main():
     dataX = houseData.data
     #i think this makes it so that majority of the data is within plus or minus 1, but outliers are included
     scaledXnormal = preprocessing.scale(dataX)
-    #reduces skewness by seeing how likely the point is (outliers are unlikely)
+    #reduces skewness by applying a logarithmic scale?
     pt = preprocessing.PowerTransformer()
     scaledXpowerTransformer = pt.fit_transform(dataX)
 
-    searchOutliers(dataX)
+    trainX, testX, trainY, testY = [], [], [], []
+    trainX, testX, trainY, testY = trainTestSplitAll(scaledXpowerTransformer, houseTargetPrices)
+    predictWithAll(trainX, testX, trainY, testY)
+
+    # searchOutliers(dataX, houseTargetPrices)
 
     # xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
     # color = ["red", "black", "green"]
