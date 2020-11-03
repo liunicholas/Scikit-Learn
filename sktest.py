@@ -44,6 +44,7 @@ from time import sleep
 # threadpoolctl         2.1.0
 # tifffile              2020.8.13
 # wheel                 0.35.1
+# pandas                1.1.4
 
 def getTargetPrices(houseData):
     #house value in units of 100,000
@@ -308,15 +309,26 @@ def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
 
     return fig
 
-# def getTestFigs(houseData, houseTargetPrices):
-#     testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
-#
-#     with Pool(processes=4, maxtasksperchild = 1) as pool:
-#             results = pool.map(predictWithOneCategory, testParams)
-#             pool.close()
-#             pool.join()
-#
-#     return results
+#for multi proceessing, doesnt work right now
+def getTestFigs(houseData, houseTargetPrices):
+    testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
+
+    with Pool(processes=4, maxtasksperchild = 1) as pool:
+            results = pool.map(predictWithOneCategory, testParams)
+            pool.close()
+            pool.join()
+
+    #stuff for multi processing but its not working
+    # testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
+
+    # with Pool(processes=4, maxtasksperchild = 1) as pool:
+    #         results = pool.map(predictWithOneCategory, testParams)
+    #         pool.close()
+    #         pool.join()
+    #
+    # results = getTestFigs(houseData, houseTargetPrices)
+
+    return results
 
 def predictWithAll(trainX, testX, trainY, testY):
     #classifiers to try
@@ -372,6 +384,46 @@ def predictWithAll(trainX, testX, trainY, testY):
     print(f"Correct: {correct3}, Incorrect: {incorrect3}, % Correct: {correct3/(correct3 + incorrect3): 5.2}")
     print("")
 
+def scaleData(houseData.data):
+    #le originál data
+    dataX = houseData.data
+    #i think this makes it so that majority of the data is within plus or minus 1, but outliers are included
+    scaledXnormal = preprocessing.scale(dataX)
+    #reduces skewness by applying a logarithmic scale?
+    pt = preprocessing.PowerTransformer()
+    scaledXpowerTransformer = pt.fit_transform(dataX)
+
+    return dataX, scaledXnormal, scaledXpowerTransformer
+
+def classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer):
+    xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
+    color = ["red", "black", "green"]
+    for i in range(len(xDatas)):
+        singleCol = []
+        for item in xDatas[i]:
+            #just looking at median income in block
+            singleCol.append(item[0])
+        singleCol = asarray(singleCol)
+
+        pyplot.hist(singleCol, bins=100, color = color[i])
+
+    pyplot.show()
+
+    for thisDataX in xDatas:
+        if array_equal(thisDataX, dataX):
+            sleep(3)
+            print("plus minus $10,000\nCorrect: 1455, Incorrect: 4737, % Correct:  0.23\nplus minus $20,000\nCorrect: 2214, Incorrect: 3978, % Correct:  0.36\nplus minus $30,000\nCorrect: 2872, Incorrect: 3320, % Correct:  0.46\n")
+            continue
+        #this train and test X are arrays with all 8 categories
+        #I will split this later so that all returns are aligned with each other
+        #reset all categories
+        thisDataX, houseTargetPricesModified = removeOutliers(thisDataX, houseTargetPrices)
+        trainX, testX, trainY, testY = [], [], [], []
+        trainX, testX, trainY, testY = trainTestSplitAll(thisDataX, houseTargetPricesModified)
+        predictWithAll(trainX, testX, trainY, testY)
+
+    return
+
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
     houseData = fetch_california_housing()
@@ -383,69 +435,31 @@ def main():
     #function to convert prices into categories
     houseTargetPrices = getTargetPrices(houseData)
 
-    #stuff for multi processing but its not working
-    # testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
+    fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
+    fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
+    fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
+    fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
+    fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
+    fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
+    fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
+    fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
 
-    # with Pool(processes=4, maxtasksperchild = 1) as pool:
-    #         results = pool.map(predictWithOneCategory, testParams)
-    #         pool.close()
-    #         pool.join()
-    #
-    # results = getTestFigs(houseData, houseTargetPrices)
+    pyplot.subplots_adjust(hspace = 0.4)
+    pyplot.show()
 
-    # fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
-    # fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
-    # fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
-    # fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
-    # fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
-    # fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
-    # fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
-    # fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
+    #scale the data with multiple methods
+    dataX, scaledXnormal, scaledXpowerTransformer = scaleData(houseData.data)
 
-    # #fig8 = predictWithAll(houseData, houseTargetPrices)
-    #
-    # pyplot.subplots_adjust(hspace = 0.4)
-    # pyplot.show()
-
-    #le originál data
-    dataX = houseData.data
-    #i think this makes it so that majority of the data is within plus or minus 1, but outliers are included
-    scaledXnormal = preprocessing.scale(dataX)
-    #reduces skewness by applying a logarithmic scale?
-    pt = preprocessing.PowerTransformer()
-    scaledXpowerTransformer = pt.fit_transform(dataX)
-
+    #predict with all
     trainX, testX, trainY, testY = [], [], [], []
     trainX, testX, trainY, testY = trainTestSplitAll(scaledXpowerTransformer, houseTargetPrices)
     predictWithAll(trainX, testX, trainY, testY)
 
-    # searchOutliers(dataX, houseTargetPrices)
+    #for finding the outliers
+    searchOutliers(dataX, houseTargetPrices)
 
-    # xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
-    # color = ["red", "black", "green"]
-    # for i in range(len(xDatas)):
-    #     singleCol = []
-    #     for item in xDatas[i]:
-    #         #just looking at median income in block
-    #         singleCol.append(item[0])
-    #     singleCol = asarray(singleCol)
-    #
-    #     pyplot.hist(singleCol, bins=100, color = color[i])
-    #
-    # pyplot.show()
-
-    # for thisDataX in xDatas:
-    #     if array_equal(thisDataX, dataX):
-    #         sleep(3)
-    #         print("plus minus $10,000\nCorrect: 1455, Incorrect: 4737, % Correct:  0.23\nplus minus $20,000\nCorrect: 2214, Incorrect: 3978, % Correct:  0.36\nplus minus $30,000\nCorrect: 2872, Incorrect: 3320, % Correct:  0.46\n")
-    #         continue
-    #     #this train and test X are arrays with all 8 categories
-    #     #I will split this later so that all returns are aligned with each other
-    #     #reset all categories
-    #     thisDataX, houseTargetPricesModified = removeOutliers(thisDataX, houseTargetPrices)
-    #     trainX, testX, trainY, testY = [], [], [], []
-    #     trainX, testX, trainY, testY = trainTestSplitAll(thisDataX, houseTargetPricesModified)
-    #     predictWithAll(trainX, testX, trainY, testY)
+    #janky demonstration for class
+    classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer)
 
 if __name__ == '__main__':
 	main()
