@@ -51,8 +51,6 @@ def getTargetPrices(houseData):
     dataY = []
     dataY = houseData.target
     for index, item in enumerate(dataY):
-        #splitting into smaller categories is not working well
-        #might try making the correct standard more lenient
         if item%1 > 0.9:
             dataY[index] = item//1 + 1
         elif item%1 > 0.8:
@@ -73,7 +71,8 @@ def getTargetPrices(houseData):
             dataY[index] = item//1 + 0.2
         else:
             dataY[index] = item//1 + 0.1
-        # print(dataY[index])
+
+        #price is in units of 1000 dollars
         dataY[index] *= 100
         dataY[index] = int(dataY[index])
 
@@ -192,7 +191,7 @@ def searchOutliers(someXset, dataY):
             print(f"average number of bedrooms: {bedrooms: 5.2f}")
             print(f"block population: {population: 5.2f}")
             print(f"average house occupancy: {occupancy: 5.2f}")
-            print(f"house price: {housePrice*100000: 5.2f}")
+            print(f"house price: {housePrice*1000: 5.2f}")
             print("")
 
     return
@@ -218,10 +217,59 @@ def removeOutliers(someXset, houseTargetPrices):
 
     return tempX, tempY
 
-#parameter should be testParams when using multiprocessing
 def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
-    #for multiprocessing
-    # houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
+    #different data each time
+    dataX = []
+    for item in houseData.data:
+        dataX.append(item[categoryNumber])
+    dataX = asarray(dataX)
+
+    #reset all categories
+    trainX, testX, trainY, testY = [], [], [], []
+    trainX, testX, trainY, testY = train_test_split(dataX, dataY, test_size = 0.3, shuffle = True)
+
+    #different classifiers to try
+    classifier1 = LogisticRegression(max_iter = 100000)
+    classifier2 = RidgeClassifier(max_iter = 10000)
+    classifier3 = SGDClassifier(max_iter = 10000, loss='log')
+    classifier4 = Perceptron()
+    classifier5 = SVC()
+    classifier6 = LinearSVC()
+
+    #i might not need these rehsapes but they're there just in case
+    trainX = trainX.reshape(-1,1)
+    testX = testX.reshape(-1,1)
+    classifier1.fit(trainX, trainY)
+    preds = []
+    preds = classifier1.predict(testX)
+
+    correct = 0
+    incorrect = 0
+    for pred, real in zip(preds, testY):
+        if pred == real:
+            correct += 1
+        else:
+            incorrect += 1
+    print(f"Correct: {correct}, Incorrect: {incorrect}, % Correct: {correct/(correct + incorrect)*100: 5.2f}")
+
+    fig = pyplot.figure(f"house price vs {categoryName}")
+    fig.tight_layout()
+    # plt1 = fig.add_subplot(221)
+    plt2 = fig.add_subplot(212)
+    plt3 = fig.add_subplot(211)
+    plt2.title.set_text("testing values")
+    plt3.title.set_text("all values")
+    #put testing category on x axis and house price on y axis
+    plt2.scatter(testX, testY, c='green', marker='_', alpha=0.5, label='real values')
+    plt2.scatter(testX, preds, c='red', marker='|', alpha=0.5, label='predicted values')
+    plt3.scatter(dataX, dataY, c='black', marker='.', alpha=0.5)
+    # pyplot.subplots_adjust(top=1.5)
+    plt2.legend(loc='lower right')
+
+    return fig
+
+def predictWithOneCategoryMP(testParams):
+    houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
 
     #different data each time
     dataX = []
@@ -273,26 +321,34 @@ def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
 
     return fig
 
-#for multi proceessing, doesnt work right now
-def getTestFigs(houseData, houseTargetPrices):
-    testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
+def predictOneMultiProcessing(houseData, houseTargetPrices):
+    testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],]
+    #[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]
 
     with Pool(processes=4, maxtasksperchild = 1) as pool:
-            results = pool.map(predictWithOneCategory, testParams)
+            results = pool.map(predictWithOneCategoryMP, testParams)
             pool.close()
             pool.join()
 
-    #stuff for multi processing but its not working
-    # testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]]
+    pyplot.show()
 
-    # with Pool(processes=4, maxtasksperchild = 1) as pool:
-    #         results = pool.map(predictWithOneCategory, testParams)
-    #         pool.close()
-    #         pool.join()
-    #
-    # results = getTestFigs(houseData, houseTargetPrices)
+    return
 
-    return results
+def predictingWithOneCategory(houseData, houseTargetPrices):
+    #trying to predict with original data and no scaling
+    fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
+    fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
+    fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
+    fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
+    fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
+    fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
+    # fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
+    # fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
+
+    pyplot.subplots_adjust(hspace = 0.4)
+    pyplot.show()
+
+    return
 
 def predictWithAll(trainX, testX, trainY, testY):
     #classifiers to try
@@ -409,22 +465,19 @@ def main():
     houseData.data = houseData.data[:,0:6]
 
     #function to convert prices into categories
+    #turns this from a regression to a classification problem
     houseTargetPrices = getTargetPrices(houseData)
 
-    fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
-    fig1 = predictWithOneCategory(houseData, houseTargetPrices, 1, "median house age")
-    fig2 = predictWithOneCategory(houseData, houseTargetPrices, 2, "average number of rooms")
-    fig3 = predictWithOneCategory(houseData, houseTargetPrices, 3, "average number of bedrooms")
-    fig4 = predictWithOneCategory(houseData, houseTargetPrices, 4, "block population")
-    fig5 = predictWithOneCategory(houseData, houseTargetPrices, 5, "house occupancy")
-    # fig6 = predictWithOneCategory(houseData, houseTargetPrices, 6, "latitude")
-    # fig7 = predictWithOneCategory(houseData, houseTargetPrices, 7, "longitude")
+    #trying to predict with original data and no scaling
+    # predictingWithOneCategory(houseData, houseTargetPrices)
 
-    pyplot.subplots_adjust(hspace = 0.4)
-    pyplot.show()
+    #trying to predict with original data and no scaling
+    #but using multi processing so it's not super slow
+    #many issues with different python versions and leaked semephores?
+    # predictOneMultiProcessing(houseData, houseTargetPrices)
 
     #scale the data with multiple methods
-    dataX, scaledXnormal, scaledXpowerTransformer = scaleData(houseData.data)
+    # dataX, scaledXnormal, scaledXpowerTransformer = scaleData(houseData.data)
 
     #predict with all
     trainX, testX, trainY, testY = [], [], [], []
@@ -432,10 +485,10 @@ def main():
     predictWithAll(trainX, testX, trainY, testY)
 
     #for finding the outliers
-    searchOutliers(dataX, houseTargetPrices)
+    # searchOutliers(dataX, houseTargetPrices)
 
     #janky demonstration for class
-    classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer, houseTargetPrices)
+    # classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer, houseTargetPrices)
 
 if __name__ == '__main__':
 	main()
