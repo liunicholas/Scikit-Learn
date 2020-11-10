@@ -456,6 +456,21 @@ def classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer, houseTarge
 
     return
 
+def predictPrice(medInc, medAge, avgRoom, avgBedroom, blockPop, houseOcc, dataX, dataY):
+    #this is predicting the same thing everytime for some reason
+    testX = [[medInc, medAge, avgRoom, avgBedroom, blockPop, houseOcc]]
+
+    classifier1 = LogisticRegression(max_iter = 100000000)
+    dataX = dataX.reshape(-1,6)
+    classifier1.fit(dataX, dataY)
+    preds = []
+    preds = classifier1.predict(testX)
+    predictedPrice = preds[0]*10000
+
+    print(f"predicted house price: {predictedPrice}")
+
+    return
+
 def main():
     #https://scikit-learn.org/stable/datasets/index.html#california-housing-dataset
     houseData = fetch_california_housing()
@@ -473,16 +488,20 @@ def main():
 
     #trying to predict with original data and no scaling
     #but using multi processing so it's not super slow
-    #many issues with different python versions and leaked semephores?
+    #issues with different python versions and leaked semephores?
     # predictOneMultiProcessing(houseData, houseTargetPrices)
 
     #scale the data with multiple methods
-    # dataX, scaledXnormal, scaledXpowerTransformer = scaleData(houseData.data)
+    dataX, scaledXnormal, scaledXpowerTransformer = scaleData(houseData.data)
 
     #predict with all
-    trainX, testX, trainY, testY = [], [], [], []
-    trainX, testX, trainY, testY = trainTestSplitAll(scaledXpowerTransformer, houseTargetPrices)
-    predictWithAll(trainX, testX, trainY, testY)
+    # trainX, testX, trainY, testY = [], [], [], []
+    # trainX, testX, trainY, testY = trainTestSplitAll(scaledXpowerTransformer, houseTargetPrices)
+    # predictWithAll(trainX, testX, trainY, testY)
+
+    #predict with own parameters
+    #medInc, medAge, avgRoom, avgBedroom, blockPop, houseOcc
+    predictPrice(0.5, 10, 4, 3, 50, 2, scaledXpowerTransformer, houseTargetPrices)
 
     #for finding the outliers
     # searchOutliers(dataX, houseTargetPrices)
