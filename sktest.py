@@ -2,6 +2,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.linear_model import Perceptron
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
 
@@ -46,6 +47,8 @@ from time import sleep
 # wheel                 0.35.1
 # pandas                1.1.4
 
+#gets the target prices for the houses
+#splits the prices into categories for this to be a classification problem
 def getTargetPrices(houseData):
     #house value in units of 100,000
     dataY = []
@@ -91,6 +94,7 @@ def getTargetPrices(houseData):
     #house value in units of 1,000 dollars
     return dataY
 
+#searches for houses that have a column with a major standard deviation from the mean
 def searchOutliers(someXset, dataY):
     # print(someXset)
     #use model.coefficients later per drew's recommendation
@@ -196,6 +200,7 @@ def searchOutliers(someXset, dataY):
 
     return
 
+#splits the data into test and train lists
 def trainTestSplitAll(dataX, dataY):
     trainX, testX, trainY, testY = [], [], [], []
     #changing the test size doesn't have much of an effect on the percent correct
@@ -203,6 +208,8 @@ def trainTestSplitAll(dataX, dataY):
 
     return trainX, testX, trainY, testY
 
+#for scaled data where the majority of the data is unit variance
+#this removes everything more than 1 away from 0
 def removeOutliers(someXset, houseTargetPrices):
     tempX = someXset
     tempY = houseTargetPrices
@@ -217,6 +224,7 @@ def removeOutliers(someXset, houseTargetPrices):
 
     return tempX, tempY
 
+#predict with one column value
 def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
     #different data each time
     dataX = []
@@ -268,6 +276,7 @@ def predictWithOneCategory(houseData, dataY, categoryNumber, categoryName):
 
     return fig
 
+#predict with one column but use multi processing
 def predictWithOneCategoryMP(testParams):
     houseData, dataY, categoryNumber, categoryName = testParams[0], testParams[1], testParams[2], testParams[3]
 
@@ -321,6 +330,7 @@ def predictWithOneCategoryMP(testParams):
 
     return fig
 
+#predict every category with multi processing
 def predictOneMultiProcessing(houseData, houseTargetPrices):
     testParams = [[houseData, houseTargetPrices, 0, "median income in block"],[houseData, houseTargetPrices, 1, "median house age"],[houseData, houseTargetPrices, 2, "average number of rooms"],[houseData, houseTargetPrices, 3, "average number of bedrooms"],[houseData, houseTargetPrices, 4, "block population"],[houseData, houseTargetPrices, 5, "house occupancy"],]
     #[houseData, houseTargetPrices, 6, "latitude"],[houseData, houseTargetPrices, 7, "longitude"]
@@ -334,6 +344,7 @@ def predictOneMultiProcessing(houseData, houseTargetPrices):
 
     return
 
+#predict every category
 def predictingWithOneCategory(houseData, houseTargetPrices):
     #trying to predict with original data and no scaling
     fig0 = predictWithOneCategory(houseData, houseTargetPrices, 0, "median income in block")
@@ -350,6 +361,7 @@ def predictingWithOneCategory(houseData, houseTargetPrices):
 
     return
 
+#predict using all columns
 def predictWithAll(trainX, testX, trainY, testY):
     #classifiers to try
     classifier1 = LogisticRegression(max_iter = 100000000)
@@ -358,12 +370,14 @@ def predictWithAll(trainX, testX, trainY, testY):
     classifier4 = Perceptron()
     classifier5 = SVC()
     classifier6 = LinearSVC()
+    classifier7 = MLPClassifier(solver="lbfgs", learning_rate="adaptive", max_iter=300)
 
     #classifier 1 is so far the best, 2 through 6 are not doing so well
+    #default 7 is as good as logistic so it should be promising
     trainX = trainX.reshape(-1,6)
-    classifier1.fit(trainX, trainY)
+    classifier7.fit(trainX, trainY)
     preds = []
-    preds = classifier1.predict(testX)
+    preds = classifier7.predict(testX)
 
     #error of 10,000 dollars
     correct1 = 0
@@ -404,6 +418,7 @@ def predictWithAll(trainX, testX, trainY, testY):
     print(f"Correct: {correct3}, Incorrect: {incorrect3}, % Correct: {correct3/(correct3 + incorrect3)*100: 5.2f}")
     print("")
 
+#scale the data X
 def scaleData(houseData):
     #le originál data
     dataX = houseData
@@ -415,6 +430,7 @@ def scaleData(houseData):
 
     return dataX, scaledXnormal, scaledXpowerTransformer
 
+#demonstration of different scalers and their effects on predictions
 def classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer, houseTargetPrices):
     allFigs = []
     xDatas = [dataX, scaledXnormal,scaledXpowerTransformer]
@@ -456,6 +472,7 @@ def classDemonstration(dataX, scaledXnormal, scaledXpowerTransformer, houseTarge
 
     return
 
+#tries to predict price using given parameters
 def predictPrice(medInc, medAge, avgRoom, avgBedroom, blockPop, houseOcc, dataX, dataY):
     #this is predicting the same thing everytime for some reason
     testX = [[medInc, medAge, avgRoom, avgBedroom, blockPop, houseOcc]]
@@ -495,13 +512,13 @@ def main():
     dataX, scaledXnormal, scaledXpowerTransformer = scaleData(houseData.data)
 
     #predict with all
-    # trainX, testX, trainY, testY = [], [], [], []
-    # trainX, testX, trainY, testY = trainTestSplitAll(scaledXpowerTransformer, houseTargetPrices)
-    # predictWithAll(trainX, testX, trainY, testY)
+    trainX, testX, trainY, testY = [], [], [], []
+    trainX, testX, trainY, testY = trainTestSplitAll(scaledXpowerTransformer, houseTargetPrices)
+    predictWithAll(trainX, testX, trainY, testY)
 
     #predict with own parameters
     #medInc, medAge, avgRoom, avgBedroom, blockPop, houseOcc
-    predictPrice(0.5, 10, 4, 3, 50, 2, scaledXpowerTransformer, houseTargetPrices)
+    # predictPrice(0.5, 10, 4, 3, 50, 2, scaledXpowerTransformer, houseTargetPrices) #there are issues with this
 
     #for finding the outliers
     # searchOutliers(dataX, houseTargetPrices)
